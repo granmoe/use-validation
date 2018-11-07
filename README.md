@@ -22,7 +22,7 @@ Here is the API in its entirety:
 
 ```js
 const { fields, handleSubmit } = useValidation({
-  fields: { foo: 'default value', bar: '' },
+  fields: { foo: 'default value', bar: '' }, // behold, the only required argument
   validate, // defaults to simple "existence" validation function
   validationOptions, // allows you to have any arbitrary extra arg passed to the validation function and onSubmit
   onSubmit, // called when handleSubmit is invoked and fields are all valid
