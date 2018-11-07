@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "test": "NODE_ENV=test && jest",
-    "compile": "babel index.js -d dist",
+    "compile": "NODE_ENV=production babel index.js -d dist",
     "prepublishOnly": "npm run compile"
   },
   "husky": {
