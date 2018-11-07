@@ -1,5 +1,7 @@
 # ✏️ ⚡️ Simple yet robust form validation for React ⚡️ ✏️
 
+The most concise and elegant form validation API known to humankind.
+
 ## Installation
 
 ### Note that this library requires the new React "hooks" API!
@@ -13,3 +15,18 @@
 [Try it on CodeSandbox!](https://codesandbox.io/embed/qknzy1qk9q?module=%2Fsrc%2Fexample.js)
 
 ## API
+
+It's one goddamned object with six motherfucking properties (and only one is required).
+
+Here is the API in its entirety:
+
+```js
+const { fields, handleSubmit } = useValidation({
+  fields: { foo: 'default value', bar: '' },
+  validate, // defaults to simple "existence" validation function
+  validationOptions, // allows you to have any arbitrary extra arg passed to the validation function and onSubmit
+  onSubmit, // called when handleSubmit is invoked and fields are all valid
+  defaultErrorMessage, // allows passing a custom error message to be used with the default validation function. Defaults to `Looks like that didn't work. Please try again.`
+  forceShowOnSubmit, // default to false,
+})
+```
