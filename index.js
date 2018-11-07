@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import makeSimpleValidator from './make-simple-validator'
 
 export default ({
   fields,
@@ -77,3 +76,9 @@ export default ({
     handleSubmit,
   }
 }
+
+const makeSimpleValidator = (fieldNames, message) => values =>
+  fieldNames.reduce((result, fieldName) => {
+    result[fieldName] = values[fieldName] === '' ? message : null
+    return result
+  }, {})
