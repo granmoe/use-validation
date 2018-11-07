@@ -5,7 +5,7 @@ export default ({
   validate,
   validationOptions,
   onSubmit,
-  defaultErrorMessage,
+  defaultErrorMessage = `Looks like that didn't work. Please try again.`,
   forceShowOnSubmit = true,
 }) => {
   const validateFunc =
