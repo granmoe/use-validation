@@ -39,7 +39,7 @@ export default ({
 
   const handleSubmit = options => {
     if (forceShowOnSubmit) {
-      // set touched to true for all fields
+      // Set touched to true for all fields
       setTouched(
         Object.keys(fields).reduce(
           (touched, fieldName) => ({

@@ -14,6 +14,17 @@
     "compile": "babel src -d dist",
     "prepublishOnly": "npm run compile"
   },
+  "husky": {
+    "pre-commit": "lint-staged",
+    "pre-push": "test"
+  },
+  "lint-staged": {
+    "*.(js|json|md)": [
+      "prettier --write",
+      "xo --fix",
+      "git add"
+    ]
+  },
   "devDependencies": {
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
@@ -21,9 +32,12 @@
     "@babel/preset-react": "^7.0.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
+    "eslint-config-xo-react": "^0.17.0",
+    "eslint-plugin-react": "^7.11.1",
     "husky": "^1.1.3",
     "jest": "^23.6.0",
     "prettier": "^1.14.3",
+    "prop-types": "^15.6.2",
     "react": "16.7.0-alpha.0",
     "react-dom": "^16.7.0-alpha.0",
     "react-testing-library": "^5.2.3",
@@ -48,11 +62,28 @@
   },
   "prettier": {
     "semi": false,
+    "bracketSpacing": true,
     "singleQuote": true,
     "trailingComma": "all"
   },
   "xo": {
-    "prettier": true
+    "extends": "xo-react",
+    "prettier": true,
+    "space": true,
+    "rules": {
+      "no-void": "off",
+      "react/require-default-props": "off",
+      "no-unused-vars": [
+        "error",
+        {
+          "varsIgnorePattern": "^_",
+          "argsIgnorePattern": "^_"
+        }
+      ]
+    },
+    "global": [
+      "test"
+    ]
   },
   "dependencies": {}
 }

@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import useValidation from '../index'
+import useValidation from '..'
 import Input from './input'
 
 export default function Form() {
@@ -11,8 +11,9 @@ export default function Form() {
       bar: '',
     },
     defaultErrorMessage: `Please enter a value`,
-    onSubmit: values => {
-      alert(`Valid form submitted: ${JSON.stringify(values)}`)
+    onSubmit: _a => {
+      // TODO: put something in the DOM that you can test against
+      // alert(`Valid form submitted: ${JSON.stringify(values)}`)
     },
   })
 
