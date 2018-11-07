@@ -1,6 +1,8 @@
-# ✏️ ⚡️ Simple yet robust form validation for React using the hooks API ⚡️ ✏️
+# ✏️ ⚡️ Simple yet robust form validation for React ⚡️ ✏️
 
 ## Installation
+
+### Note that this library requires the new React "hooks" API!
 
 `yarn add use-validation`
 
