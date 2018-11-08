@@ -56,7 +56,7 @@ export default ({
     )
     if (!isValid) return
 
-    onSubmit(values, options)
+    onSubmit && onSubmit(values, options)
   }
 
   return {

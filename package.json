@@ -85,6 +85,12 @@
           "varsIgnorePattern": "^_",
           "argsIgnorePattern": "^_"
         }
+      ],
+      "no-unused-expressions": [
+        "error",
+        {
+          "allowShortCircuit": true
+        }
       ]
     },
     "global": [
