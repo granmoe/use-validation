@@ -12,7 +12,29 @@ The most concise and elegant form validation API known to humankind.
 
 ### Simplest Case (a few simple inputs, default validation function)
 
-[Try it on CodeSandbox!](https://codesandbox.io/embed/qknzy1qk9q?module=%2Fsrc%2Fexample.js)
+```js
+const { fields, handleSubmit } = useValidation({
+  fields: { foo: '', bar: '' },
+})
+
+return (
+  <Wrapper>
+    <h1>Validation using h00X, bruh</h1>
+    <form
+      onSubmit={e => {
+        e.preventDefault()
+        handleSubmit()
+      }}
+    >
+      <Input {...fields.foo} name="foo" />
+      <Input {...fields.bar} name="bar" />
+      <Button type="submit">Submit</Button>
+    </form>
+  </Wrapper>
+)
+```
+
+[Try this example on CodeSandbox!](https://codesandbox.io/embed/qknzy1qk9q?module=%2Fsrc%2Fexample.js)
 
 ## API
 
