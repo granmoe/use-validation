@@ -2,6 +2,8 @@
 
 The most concise and elegant form validation API known to humankind.
 
+_Weighing in at a whopping 1 kB gzipped and minified._
+
 ## Installation
 
 ### Note that this library requires the new React "hooks" API!
