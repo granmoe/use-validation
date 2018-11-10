@@ -21,7 +21,7 @@ const { fields, handleSubmit } = useValidation({
 
 return (
   <Wrapper>
-    <h1>Validation using h00X, bruh</h1>
+    <h1>Validation using hūX</h1>
     <form
       onSubmit={e => {
         e.preventDefault()
@@ -40,17 +40,31 @@ return (
 
 ## API
 
+### Input
+
 It's one goddamned object with six motherfucking properties (and only one is required).
 
-Here is the API in its entirety:
+This snippet shows the API in its entirety:
 
 ```js
 const { fields, handleSubmit } = useValidation({
   fields: { foo: 'default value', bar: '' }, // behold, the only required argument
-  validate, // defaults to simple "existence" validation function
+  validate, // defaults to simple "existence" validation function, receives values by field name object and validationOptions as arguments, should return an object with errors by field name
   validationOptions, // allows you to have any arbitrary extra arg passed to the validation function and onSubmit
-  onSubmit, // called when handleSubmit is invoked and fields are all valid
+  onSubmit, // called when handleSubmit is invoked and fields are all valid, receives values by field name object and validationOptions as arguments
   defaultErrorMessage, // allows passing a custom error message to be used with the default validation function. Defaults to `Looks like that didn't work. Please try again.`
-  forceShowOnSubmit, // default to false,
+  forceShowOnSubmit, // defaults to true,
 })
 ```
+
+### Output
+
+An object with two keys: `fields` and `handleSubmit`.
+
+`fields` is an object that contains the following keys for each field you passed in:
+
+`value`: the value of the field
+`touched`: whether the field has been blurred
+`error`: any error message returned from the validate function for this field
+
+`handleSubmit` is a function that will call your `onSubmit` (if you passed one). If forceShowOnSubmit is true, `touched` will be set to true on all fields when `handleSubmit` is invoked.

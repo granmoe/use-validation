@@ -2,19 +2,14 @@ import { useState } from 'react'
 
 export default ({
   fields,
-  validate,
+  defaultErrorMessage = `Looks like that didn't work. Please try again.`,
+  validate = makeSimpleValidator(Object.keys(fields), defaultErrorMessage),
+  forceShowOnSubmit = true,
   validationOptions,
   onSubmit,
-  defaultErrorMessage = `Looks like that didn't work. Please try again.`,
-  forceShowOnSubmit = true,
 }) => {
-  const validateFunc =
-    validate || makeSimpleValidator(Object.keys(fields), defaultErrorMessage)
-
-  const initialErrors = validateFunc(fields, validationOptions)
-
   const [values, setValues] = useState(fields)
-  const [errors, setErrors] = useState(initialErrors)
+  const [errors, setErrors] = useState(validate(fields, validationOptions))
   const [touched, setTouched] = useState({})
 
   const handleChange = fieldName => eventOrValue => {
@@ -26,7 +21,7 @@ export default ({
         : eventOrValue,
     }
     setValues(newValues)
-    setErrors(validateFunc(newValues, validationOptions))
+    setErrors(validate(newValues, validationOptions))
   }
 
   const handleBlur = fieldName => () => {
@@ -38,7 +33,6 @@ export default ({
 
   const handleSubmit = options => {
     if (forceShowOnSubmit) {
-      // Set touched to true for all fields
       setTouched(
         Object.keys(fields).reduce(
           (touched, fieldName) => ({

@@ -71,7 +71,8 @@
       ]
     },
     "global": [
-      "test"
+      "test",
+      "expect"
     ]
   },
   "dependencies": {},
