@@ -66,5 +66,7 @@ An object with two keys: `fields` and `handleSubmit`.
 - `value`: the value of the field
 - `touched`: whether the field has been blurred
 - `error`: any error message returned from the validate function for this field
+- `onChange`: call this with either a value or an event to update the field's value
+- `onBlur`: call this to set touched to `true` for the field
 
 `handleSubmit` is a function that will call your `onSubmit` (if you passed one). If forceShowOnSubmit is true, `touched` will be set to true on all fields when `handleSubmit` is invoked.
