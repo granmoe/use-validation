@@ -4,6 +4,14 @@
   "main": "dist/index.js",
   "license": "MIT",
   "author": "Matt Granmoe",
+  "homepage": "https://github.com/granmoe/use-validation",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/granmoe/use-validation.git"
+  },
+  "bugs": {
+    "url": "https://github.com/granmoe/use-validation/issues"
+  },
   "description": "",
   "keywords": [],
   "files": [
