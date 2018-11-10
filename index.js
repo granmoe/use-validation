@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 export default ({
   fields,
@@ -54,19 +54,21 @@ export default ({
   }
 
   return {
-    fields: Object.keys(fields).reduce(
-      (result, fieldName) => ({
+    fields: Object.keys(fields).reduce((result, fieldName) => {
+      const onChangeRef = useRef(handleChange(fieldName))
+      const onBlurRef = useRef(handleBlur(fieldName))
+
+      return {
         ...result,
         [fieldName]: {
           error: errors[fieldName],
           touched: touched[fieldName],
           value: values[fieldName],
-          onChange: handleChange(fieldName),
-          onBlur: handleBlur(fieldName),
+          onChange: onChangeRef.current,
+          onBlur: onBlurRef.current,
         },
-      }),
-      {},
-    ),
+      }
+    }, {}),
     handleSubmit,
   }
 }

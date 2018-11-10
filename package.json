@@ -79,8 +79,11 @@
       ]
     },
     "global": [
+      "describe",
       "test",
-      "expect"
+      "xtest",
+      "expect",
+      "jest"
     ]
   },
   "dependencies": {},

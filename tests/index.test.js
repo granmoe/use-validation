@@ -1,162 +1,10 @@
 import React from 'react'
-import { render } from 'react-testing-library'
-import useValidation from '..'
+import { render, fireEvent } from 'react-testing-library'
+import useValidation from '../index' // eslint-disable-line unicorn/import-index
+// 👆 for some reason, using '..' seems to result in a stale version of this file
 
-// I like how this approach lets me test my hook as if it's a pure function,
-// but something about this feels weird 🤔 🤫
-
-// FIXME: Maybe break this up into testing initial state, then testing value, touched, and error separately
-test('value, touched, and error update correctly when onChange and onBlur called; custom error message works', () => {
-  let counter = 0
-  render(
-    <Test>
-      {fields => {
-        const fooFuncs = {
-          onChange: fields.foo.onChange,
-          onBlur: fields.foo.onBlur,
-        }
-        const barFuncs = {
-          onChange: fields.bar.onChange,
-          onBlur: fields.bar.onBlur,
-        }
-
-        switch (counter) {
-          case 0:
-            expect(fields).toEqual({
-              foo: {
-                value: '',
-                touched: undefined,
-                error: 'Please enter a value',
-                ...fooFuncs,
-              },
-              bar: {
-                value: '',
-                touched: undefined,
-                error: 'Please enter a value',
-                ...barFuncs,
-              },
-            })
-
-            fields.foo.onChange('foo')
-            break
-          case 1:
-            expect(fields).toEqual({
-              foo: {
-                value: 'foo',
-                touched: undefined,
-                error: null,
-                ...fooFuncs,
-              },
-              bar: {
-                value: '',
-                touched: undefined,
-                error: 'Please enter a value',
-                ...barFuncs,
-              },
-            })
-
-            fields.bar.onChange('bar')
-            break
-          case 2:
-            expect(fields).toEqual({
-              foo: {
-                value: 'foo',
-                touched: undefined,
-                error: null,
-                ...fooFuncs,
-              },
-              bar: {
-                value: 'bar',
-                touched: undefined,
-                error: null,
-                ...barFuncs,
-              },
-            })
-
-            fields.foo.onBlur()
-            break
-          case 3:
-            expect(fields).toEqual({
-              foo: {
-                value: 'foo',
-                touched: true,
-                error: null,
-                ...fooFuncs,
-              },
-              bar: {
-                value: 'bar',
-                touched: undefined,
-                error: null,
-                ...barFuncs,
-              },
-            })
-
-            fields.bar.onBlur()
-            break
-          case 4:
-            expect(fields).toEqual({
-              foo: {
-                value: 'foo',
-                touched: true,
-                error: null,
-                ...fooFuncs,
-              },
-              bar: {
-                value: 'bar',
-                touched: true,
-                error: null,
-                ...barFuncs,
-              },
-            })
-
-            fields.foo.onChange('')
-            break
-          case 5:
-            expect(fields).toEqual({
-              foo: {
-                value: '',
-                touched: true,
-                error: 'Please enter a value',
-                ...fooFuncs,
-              },
-              bar: {
-                value: 'bar',
-                touched: true,
-                error: null,
-                ...barFuncs,
-              },
-            })
-
-            fields.bar.onChange('')
-            break
-          case 6:
-            expect(fields).toEqual({
-              foo: {
-                value: '',
-                touched: true,
-                error: 'Please enter a value',
-                ...fooFuncs,
-              },
-              bar: {
-                value: '',
-                touched: true,
-                error: 'Please enter a value',
-                ...barFuncs,
-              },
-            })
-
-            break
-          default:
-            break
-        }
-
-        counter++
-        return null
-      }}
-    </Test>,
-  )
-
-  function Test({ children }) {
+describe('use-validation', () => {
+  const Test = ({ mockFunc, handleSubmit }) => {
     const { fields } = useValidation({
       fields: {
         foo: '',
@@ -165,8 +13,84 @@ test('value, touched, and error update correctly when onChange and onBlur called
       defaultErrorMessage: `Please enter a value`,
     })
 
-    return children(fields)
+    mockFunc({ fields, handleSubmit })
+
+    return (
+      <React.Fragment>
+        <input {...fields.foo} data-testid="foo" />
+        <input
+          {...fields.bar}
+          data-testid="bar"
+          onChange={e => {
+            fields.bar.onChange(e.target.value)
+          }}
+        />
+      </React.Fragment>
+    )
   }
+
+  const mockFunc = jest.fn()
+  const { getByTestId } = render(<Test mockFunc={mockFunc} />)
+
+  const [{ fields }] = mockFunc.mock.calls[0]
+  const fooFuncs = {
+    onChange: fields.foo.onChange,
+    onBlur: fields.foo.onBlur,
+  }
+  const barFuncs = {
+    onChange: fields.bar.onChange,
+    onBlur: fields.bar.onBlur,
+  }
+
+  test('fields are initialized correctly', () => {
+    expect(mockFunc.mock.calls[0][0].fields).toEqual({
+      foo: {
+        value: '',
+        touched: undefined,
+        error: 'Please enter a value',
+        ...fooFuncs,
+      },
+      bar: {
+        value: '',
+        touched: undefined,
+        error: 'Please enter a value',
+        ...barFuncs,
+      },
+    })
+  })
+
+  test('values are updated correctly when onChange is called with an event', () => {
+    fireEvent.change(getByTestId('foo'), {
+      target: {
+        value: 'foo value',
+      },
+    })
+    expect(mockFunc.mock.calls[1][0].fields.foo.value).toEqual('foo value')
+  })
+
+  test('values are updated correctly when onChange is called with a plain value', () => {
+    fireEvent.change(getByTestId('bar'), {
+      target: {
+        value: 'bar value',
+      },
+    })
+    expect(mockFunc.mock.calls[2][0].fields.bar.value).toEqual('bar value')
+  })
+
+  test('same reference is used for handleSubmit function across renders', () => {
+    expect(mockFunc.mock.calls[0][0].handleSubmit).toBe(
+      mockFunc.mock.calls[1][0].handleSubmit,
+    )
+  })
+
+  test('same reference is used for field functions across renders', () => {
+    expect(mockFunc.mock.calls[0][0].fields.foo.onChange).toBe(
+      mockFunc.mock.calls[1][0].fields.foo.onChange,
+    )
+    expect(mockFunc.mock.calls[0][0].fields.foo.onBlur).toBe(
+      mockFunc.mock.calls[1][0].fields.foo.onBlur,
+    )
+  })
 })
 
 /* Blah
