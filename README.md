@@ -36,7 +36,7 @@ return (
 )
 ```
 
-[Try this example on CodeSandbox!](https://codesandbox.io/embed/qknzy1qk9q?module=%2Fsrc%2Fexample.js)
+_[Try this example on CodeSandbox!](https://codesandbox.io/embed/qknzy1qk9q?module=%2Fsrc%2Fexample.js)_
 
 ## API
 

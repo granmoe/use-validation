@@ -175,9 +175,6 @@ forceShowOnSubmit true
 forceShowOnSubmit false
 validationOptions
 onSubmit
-handleSubmit sets touched to true for all fields
-*/
 
-/* Done
-default validate with custom error message
+maybe move this file inline with index in parent dir
 */
