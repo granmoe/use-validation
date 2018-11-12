@@ -59,21 +59,19 @@ export default ({
   })
 
   return {
-    fields: Object.keys(initialValues).reduce((result, fieldName) => {
-      const onChangeRef = useRef(handleChange(fieldName))
-      const onBlurRef = useRef(handleBlur(fieldName))
-
-      return {
+    fields: Object.keys(initialValues).reduce(
+      (result, fieldName) => ({
         ...result,
         [fieldName]: {
           error: errors[fieldName],
           touched: touched[fieldName],
           value: values[fieldName],
-          onChange: onChangeRef.current,
-          onBlur: onBlurRef.current,
+          onChange: handleChange(fieldName),
+          onBlur: handleBlur(fieldName),
         },
-      }
-    }, {}),
+      }),
+      {},
+    ),
     handleSubmit: handleSubmitRef.current,
   }
 }
