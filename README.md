@@ -76,6 +76,8 @@ const { fields, handleSubmit } = useValidation({
 })
 ```
 
+#### Options
+
 | Name                  | Type                | Description                                                                                                                                                                                              | Default Value                                      | Required? |
 | --------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------- |
 | `initialValues`       | { [string]: [any] } | An object with field names as keys and their initial values as values. Only field names in this object will be returned by the hook, so include the field here even if the initial value is `undefined`. |                                                    | Yes       |
