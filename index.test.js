@@ -1,7 +1,6 @@
 import React from 'react'
 import { render, fireEvent } from 'react-testing-library'
-import useValidation from '../index' // eslint-disable-line unicorn/import-index
-// 👆 for some reason, using '..' seems to result in a stale version of this file
+import useValidation from '.'
 
 const setupTest = options => {
   // eslint-disable-next-line react/prop-types
