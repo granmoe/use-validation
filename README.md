@@ -47,15 +47,43 @@ It's one goddamned object with six motherfucking properties (and only one is req
 This snippet shows the API in its entirety:
 
 ```js
+const myValidationFunc = (
+  { foo, bar },
+  { someRandomThing, someOtherJunk },
+) => ({
+  foo:
+    typeof foo !== 'number'
+      ? 'Please enter a number'
+      : foo === someOtherJunk
+        ? `foo cannot be ${someOtherJunk}`
+        : null,
+  bar: bar === someRandomThing ? `bar cannot be ${someRandomThing}` : null,
+})
+
 const { fields, handleSubmit } = useValidation({
-  initialValues: { foo: 'default value', bar: '' }, // behold, the only required argument
-  validate, // defaults to simple "existence" validation function, receives values by field name object and validationOptions as arguments, should return an object with errors by field name
-  validationOptions, // allows you to have any arbitrary extra arg passed to the validation function and onSubmit
-  onSubmit, // called when handleSubmit is invoked and fields are all valid, receives values by field name object and validationOptions as arguments
-  defaultErrorMessage, // allows passing a custom error message to be used with the default validation function. Defaults to `Looks like that didn't work. Please try again.`
-  forceShowOnSubmit, // defaults to true,
+  initialValues: { foo: 'default value', bar: '' },
+  validate: myValidationFunc,
+  validationOptions: {
+    someRandomThing: 'asdf',
+    someOtherJunk: 123,
+  },
+  onSubmit: (values, { someRandomThing }) => {
+    updateUser(values)
+    doOtherThings({ someRandomThing })
+  },
+  defaultErrorMessage: `This won't have any effect in this case since we're using a custom validation function.`,
+  forceShowOnSubmit: false,
 })
 ```
+
+| Name                  | Type                  | Description                                                                                                                                                                                              | Default Value                                      | Required? |
+| --------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------- |
+| `initialValues`       | `{ [string]: [any] }` | An object with field names as keys and their initial values as values. Only field names in this object will be returned by the hook, so include the field here even if the initial value is `undefined`. |                                                    | Yes       |
+| `validate`            | function              | A function that will receive two arguments: an object with field values by name and validationOptions. Should return an object with errors (or any falsy value to represent no error) by field name      | Simple, truthy validation function                 | No        |
+| `validationOptions`   | any                   | Allows any arbitrary second argument to be passed to `validate` and `onSubmit`. Used primarily for looking at values outside of your fields when validating.                                             |                                                    | No        |
+| `onSubmit`            | function              | Called by the hook when `handleSubmit` is invoked and all fields are valid.                                                                                                                              |                                                    | No        |
+| `defaultErrorMessage` | string                | The error message that will be set to a field by the default validation function.                                                                                                                        | `"Looks like that didn't work. Please try again."` | No        |
+| `forceShowOnSubmit`   | boolean               | Causes touched to be set to true for all fields when `handleSubmit` is invoked.                                                                                                                          | `true`                                             | No        |
 
 ### Output
 
@@ -69,4 +97,4 @@ An object with two keys: `fields` and `handleSubmit`.
 - `onChange`: call this with either a value or an event to update the field's value
 - `onBlur`: call this to set touched to `true` for the field
 
-`handleSubmit` is a function that will call your `onSubmit` (if you passed one). If forceShowOnSubmit is true, `touched` will be set to true on all fields when `handleSubmit` is invoked.
+`handleSubmit` is a function that will call `onSubmit` (if it was passed). If forceShowOnSubmit is true, `touched` will be set to true on all fields when `handleSubmit` is invoked.
