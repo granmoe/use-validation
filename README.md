@@ -16,7 +16,7 @@ _Weighing in at a whopping 1 kB gzipped and minified._
 
 ```js
 const { fields, handleSubmit } = useValidation({
-  fields: { foo: '', bar: '' },
+  initialValues: { foo: '', bar: '' },
 })
 
 return (
@@ -48,7 +48,7 @@ This snippet shows the API in its entirety:
 
 ```js
 const { fields, handleSubmit } = useValidation({
-  fields: { foo: 'default value', bar: '' }, // behold, the only required argument
+  initialValues: { foo: 'default value', bar: '' }, // behold, the only required argument
   validate, // defaults to simple "existence" validation function, receives values by field name object and validationOptions as arguments, should return an object with errors by field name
   validationOptions, // allows you to have any arbitrary extra arg passed to the validation function and onSubmit
   onSubmit, // called when handleSubmit is invoked and fields are all valid, receives values by field name object and validationOptions as arguments

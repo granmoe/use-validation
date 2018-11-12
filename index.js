@@ -1,15 +1,20 @@
 import { useState, useRef } from 'react'
 
 export default ({
-  fields,
+  initialValues,
   defaultErrorMessage = `Looks like that didn't work. Please try again.`,
-  validate = makeSimpleValidator(Object.keys(fields), defaultErrorMessage),
+  validate = makeSimpleValidator(
+    Object.keys(initialValues),
+    defaultErrorMessage,
+  ),
   forceShowOnSubmit = true,
   validationOptions,
   onSubmit,
 }) => {
-  const [values, setValues] = useState(fields)
-  const [errors, setErrors] = useState(validate(fields, validationOptions))
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState(
+    validate(initialValues, validationOptions),
+  )
   const [touched, setTouched] = useState({})
 
   const handleChange = fieldName => eventOrValue => {
@@ -31,10 +36,10 @@ export default ({
     })
   }
 
-  const handleSubmit = options => {
+  const handleSubmitRef = useRef(options => {
     if (forceShowOnSubmit) {
       setTouched(
-        Object.keys(fields).reduce(
+        Object.keys(initialValues).reduce(
           (touched, fieldName) => ({
             ...touched,
             [fieldName]: true,
@@ -51,10 +56,10 @@ export default ({
     if (!isValid) return
 
     onSubmit && onSubmit(values, options)
-  }
+  })
 
   return {
-    fields: Object.keys(fields).reduce((result, fieldName) => {
+    fields: Object.keys(initialValues).reduce((result, fieldName) => {
       const onChangeRef = useRef(handleChange(fieldName))
       const onBlurRef = useRef(handleBlur(fieldName))
 
@@ -69,7 +74,7 @@ export default ({
         },
       }
     }, {}),
-    handleSubmit,
+    handleSubmit: handleSubmitRef.current,
   }
 }
 

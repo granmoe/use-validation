@@ -4,9 +4,10 @@ import useValidation from '../index' // eslint-disable-line unicorn/import-index
 // 👆 for some reason, using '..' seems to result in a stale version of this file
 
 const setupTest = options => {
+  // eslint-disable-next-line react/prop-types
   const Test = ({ mockFunc }) => {
     const { fields, handleSubmit } = useValidation({
-      fields: {
+      initialValues: {
         foo: '',
         bar: '',
         baz: '',
@@ -140,7 +141,7 @@ describe('use-validation', () => {
     expect(mockFunc.mock.calls[lastMockCall][0].fields.baz.touched).toBeTruthy()
   })
 
-  xtest('same reference is used for handleSubmit function across renders', () => {
+  test('same reference is used for handleSubmit function across renders', () => {
     expect(mockFunc.mock.calls[0][0].handleSubmit).toBe(
       mockFunc.mock.calls[1][0].handleSubmit,
     )
