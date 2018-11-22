@@ -12,8 +12,14 @@
   "bugs": {
     "url": "https://github.com/granmoe/use-validation/issues"
   },
-  "description": "",
-  "keywords": [],
+  "description": "Astonishingly easy form validation for React using hooks",
+  "keywords": [
+    "javascript",
+    "react",
+    "form-validation",
+    "hooks",
+    "validation"
+  ],
   "files": [
     "dist/"
   ],
