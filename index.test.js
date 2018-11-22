@@ -4,7 +4,7 @@ import useValidation from './index' // eslint-disable-line unicorn/import-index
 
 const setupTest = options => {
   // eslint-disable-next-line react/prop-types
-  const Test = ({ mockFunc }) => {
+  const TestComponent = ({ mockFunc }) => {
     const { fields, handleSubmit } = useValidation({
       initialValues: {
         foo: '',
@@ -40,20 +40,26 @@ const setupTest = options => {
   }
 
   const mockFunc = jest.fn()
-  const renderContext = render(<Test mockFunc={mockFunc} />)
+  const renderContext = render(<TestComponent mockFunc={mockFunc} />)
 
   return { mockFunc, renderContext }
 }
 
+const getLastArgs = mockObject =>
+  mockObject.mock.calls[mockObject.mock.calls.length - 1][0]
+
 describe('use-validation', () => {
+  const mockOnSubmit = jest.fn()
   const {
     renderContext: { getByTestId },
     mockFunc,
-  } = setupTest({ defaultErrorMessage: 'Please enter a value' })
+  } = setupTest({
+    defaultErrorMessage: 'Please enter a value',
+    onSubmit: mockOnSubmit,
+  })
 
-  let lastMockCall = 0 // More convenient than doing mockFunc.mock.calls.length everywhere
   test('fields are initialized correctly', () => {
-    const [{ fields }] = mockFunc.mock.calls[0]
+    const { fields } = getLastArgs(mockFunc)
 
     expect(fields).toEqual({
       foo: {
@@ -86,8 +92,7 @@ describe('use-validation', () => {
         value: 'foo value',
       },
     })
-    lastMockCall++
-    const { fields } = mockFunc.mock.calls[lastMockCall][0]
+    const { fields } = getLastArgs(mockFunc)
 
     expect(fields.foo.value).toEqual('foo value')
     expect(fields.bar.value).toEqual('')
@@ -100,8 +105,7 @@ describe('use-validation', () => {
         value: 'bar value',
       },
     })
-    lastMockCall++
-    const { fields } = mockFunc.mock.calls[lastMockCall][0]
+    const { fields } = getLastArgs(mockFunc)
 
     expect(fields.foo.value).toEqual('foo value')
     expect(fields.bar.value).toEqual('bar value')
@@ -109,31 +113,44 @@ describe('use-validation', () => {
   })
 
   test('errors are updated correctly when values change', () => {
-    expect(mockFunc.mock.calls[lastMockCall - 1][0].fields.foo.error).toEqual(
-      null,
-    )
-    expect(mockFunc.mock.calls[lastMockCall - 1][0].fields.bar.error).toEqual(
-      'Please enter a value',
-    )
-    expect(mockFunc.mock.calls[lastMockCall - 1][0].fields.baz.error).toEqual(
-      'Please enter a value',
-    )
-    expect(mockFunc.mock.calls[lastMockCall][0].fields.foo.error).toEqual(null)
-    expect(mockFunc.mock.calls[lastMockCall][0].fields.bar.error).toEqual(null)
-    expect(mockFunc.mock.calls[lastMockCall][0].fields.baz.error).toEqual(
-      'Please enter a value',
+    const { fields: prevFields } = mockFunc.mock.calls[
+      mockFunc.mock.calls.length - 2
+    ][0]
+
+    expect(prevFields.foo.error).toEqual(null)
+    expect(prevFields.bar.error).toEqual('Please enter a value')
+    expect(prevFields.baz.error).toEqual('Please enter a value')
+
+    const { fields: currentFields } = getLastArgs(mockFunc)
+
+    expect(currentFields.foo.error).toEqual(null)
+    expect(currentFields.bar.error).toEqual(null)
+    expect(currentFields.baz.error).toEqual('Please enter a value')
+  })
+
+  test('custom error message for defaultValidation is used if passed', () => {
+    const { fields } = getLastArgs(mockFunc)
+    expect(fields.baz.error).toEqual('Please enter a value')
+  })
+
+  test('default error message used if errorMessage not passed', () => {
+    const { mockFunc } = setupTest()
+    const { fields } = getLastArgs(mockFunc)
+    expect(fields.foo.error).toBe(
+      `Looks like that didn't work. Please try again.`,
     )
   })
 
   test('touched is updated correctly when field is blurred', () => {
-    const fieldsBeforeBlur = mockFunc.mock.calls[lastMockCall][0].fields
+    const { fields: fieldsBeforeBlur } = getLastArgs(mockFunc)
+
     expect(fieldsBeforeBlur.foo.touched).toBeFalsy()
     expect(fieldsBeforeBlur.bar.touched).toBeFalsy()
     expect(fieldsBeforeBlur.baz.touched).toBeFalsy()
 
     fireEvent.blur(getByTestId('foo'))
-    lastMockCall++
-    const fieldsAfterBlur = mockFunc.mock.calls[lastMockCall][0].fields
+
+    const { fields: fieldsAfterBlur } = getLastArgs(mockFunc)
 
     expect(fieldsAfterBlur.foo.touched).toBeTruthy()
     expect(fieldsAfterBlur.bar.touched).toBeFalsy()
@@ -141,48 +158,74 @@ describe('use-validation', () => {
   })
 
   test('touched is set to true on all fields when handleSubmit is called', () => {
-    mockFunc.mock.calls[lastMockCall][0].handleSubmit()
-    lastMockCall++
+    const { handleSubmit } = getLastArgs(mockFunc)
+    handleSubmit()
 
-    expect(mockFunc.mock.calls[lastMockCall][0].fields.foo.touched).toBeTruthy()
-    expect(mockFunc.mock.calls[lastMockCall][0].fields.bar.touched).toBeTruthy()
-    expect(mockFunc.mock.calls[lastMockCall][0].fields.baz.touched).toBeTruthy()
+    const { fields } = getLastArgs(mockFunc)
+
+    expect(fields.foo.touched).toBeTruthy()
+    expect(fields.bar.touched).toBeTruthy()
+    expect(fields.baz.touched).toBeTruthy()
   })
 
-  test('same reference is used for handleSubmit function across renders', () => {
-    expect(mockFunc.mock.calls[0][0].handleSubmit).toBe(
-      mockFunc.mock.calls[1][0].handleSubmit,
-    )
+  test('touched is NOT changed on any fields when handleSubmit is called if forceShowOnSubmit is passed as true', () => {
+    const { mockFunc } = setupTest()
+    const { fields, handleSubmit } = getLastArgs(mockFunc)
+    handleSubmit()
+
+    expect(fields.foo.touched).toBeFalsy()
+    expect(fields.bar.touched).toBeFalsy()
+    expect(fields.baz.touched).toBeFalsy()
   })
 
-  xtest('same reference is used for field functions across renders', () => {
-    expect(mockFunc.mock.calls[0][0].fields.foo.onChange).toBe(
-      mockFunc.mock.calls[1][0].fields.foo.onChange,
+  test('handleSubmit does not call onSubmit when one or more fields are invalid', () => {
+    const { handleSubmit } = getLastArgs(mockFunc)
+    handleSubmit()
+
+    expect(mockOnSubmit.mock.calls.length).toBe(0)
+  })
+
+  test('handleSubmit calls onSubmit when all fields are valid', () => {
+    fireEvent.change(getByTestId('baz'), {
+      target: {
+        value: 'baz value',
+      },
+    })
+
+    const { handleSubmit } = getLastArgs(mockFunc)
+    handleSubmit()
+
+    expect(mockOnSubmit.mock.calls.length).toBe(1)
+  })
+
+  test('validationOptions are passed to validate and onSubmit', () => {
+    const onSubmitMock = jest.fn()
+    const validateMock = jest.fn(() => ({}))
+
+    const { mockFunc } = setupTest({
+      validationOptions: 123,
+      onSubmit: onSubmitMock,
+      validate: validateMock,
+    })
+
+    const { handleSubmit } = getLastArgs(mockFunc)
+    handleSubmit()
+
+    expect(getLastArgs(onSubmitMock)).toEqual(
+      {
+        foo: '',
+        bar: '',
+        baz: '',
+      },
+      123,
     )
-    expect(mockFunc.mock.calls[0][0].fields.foo.onBlur).toBe(
-      mockFunc.mock.calls[1][0].fields.foo.onBlur,
+    expect(getLastArgs(validateMock)).toEqual(
+      {
+        foo: '',
+        bar: '',
+        baz: '',
+      },
+      123,
     )
   })
 })
-
-/* Blah
-  export default ({
-    fields,
-    defaultErrorMessage = `Looks like that didn't work. Please try again.`,
-    validate = makeSimpleValidator(Object.keys(fields), defaultErrorMessage),
-    forceShowOnSubmit = true,
-    validationOptions,
-    onSubmit,
-  }) => {
-*/
-
-/* To Do
-defaultErrorMessage + default validate
-custom validate
-forceShowOnSubmit true
-forceShowOnSubmit false
-validationOptions
-onSubmit
-
-maybe move this file inline with index in parent dir
-*/

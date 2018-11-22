@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 
 export default ({
   initialValues,
@@ -36,7 +36,7 @@ export default ({
     })
   }
 
-  const handleSubmitRef = useRef(options => {
+  const handleSubmit = () => {
     if (forceShowOnSubmit) {
       setTouched(
         Object.keys(initialValues).reduce(
@@ -49,19 +49,17 @@ export default ({
       )
     }
 
-    const isValid = Object.values(errors).reduce(
-      (isValid, error) => isValid && !error,
-      true,
-    )
-    if (!isValid) return
+    for (const error of Object.values(errors)) {
+      if (error) return
+    }
 
-    onSubmit && onSubmit(values, options)
-  })
+    onSubmit && onSubmit(values, validationOptions)
+  }
 
   return {
     fields: Object.keys(initialValues).reduce(
-      (result, fieldName) => ({
-        ...result,
+      (fields, fieldName) => ({
+        ...fields,
         [fieldName]: {
           error: errors[fieldName],
           touched: touched[fieldName],
@@ -72,12 +70,12 @@ export default ({
       }),
       {},
     ),
-    handleSubmit: handleSubmitRef.current,
+    handleSubmit,
   }
 }
 
 const makeSimpleValidator = (fieldNames, message) => values =>
-  fieldNames.reduce((result, fieldName) => {
-    result[fieldName] = values[fieldName] === '' ? message : null
-    return result
+  fieldNames.reduce((errors, fieldName) => {
+    errors[fieldName] = values[fieldName] === '' ? message : null
+    return errors
   }, {})
