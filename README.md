@@ -2,7 +2,7 @@
 
 The most concise and elegant form validation API known to humankind.
 
-_Weighing in at a whopping 1 kB gzipped and minified._
+_Weighing in at a whopping 1.1 kB gzipped and minified._
 
 ## Installation
 
