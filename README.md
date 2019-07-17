@@ -42,7 +42,7 @@ _[Try this example on CodeSandbox!](https://codesandbox.io/embed/qknzy1qk9q?modu
 
 ### Input
 
-It's one goddamned object with six motherfucking properties (and only one is required).
+It's one object with six properties (and only one is required).
 
 This snippet shows the API in its entirety:
 
