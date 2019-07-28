@@ -198,37 +198,6 @@ describe('use-validation', () => {
     expect(mockOnSubmit.mock.calls.length).toBe(1)
   })
 
-  test('validationOptions are passed to validate and onSubmit', () => {
-    const onSubmitMock = jest.fn()
-    const validateMock = jest.fn(() => ({}))
-
-    const { mockFunc } = setupTest({
-      validationOptions: 123,
-      onSubmit: onSubmitMock,
-      validate: validateMock,
-    })
-
-    const { handleSubmit } = getLastArgs(mockFunc)
-    handleSubmit()
-
-    expect(getLastArgs(onSubmitMock)).toEqual(
-      {
-        foo: '',
-        bar: '',
-        baz: '',
-      },
-      123,
-    )
-    expect(getLastArgs(validateMock)).toEqual(
-      {
-        foo: '',
-        bar: '',
-        baz: '',
-      },
-      123,
-    )
-  })
-
   test('handleChange and handleBlur references persist across renders', () => {
     const { fields: prevFields } = mockFunc.mock.calls[
       mockFunc.mock.calls.length - 2
@@ -243,4 +212,46 @@ describe('use-validation', () => {
     expect(currentFields.baz.onChange).toEqual(prevFields.baz.onChange)
     expect(currentFields.baz.onBlur).toEqual(prevFields.baz.onBlur)
   })
+
+  // TODO...wtf?
+  xtest('handleSubmit reference is not persisted across renders', () => {
+    const { handleSubmit: prevHandleSubmit } = mockFunc.mock.calls[
+      mockFunc.mock.calls.length - 2
+    ][0]
+
+    const { handleSubmit } = getLastArgs(mockFunc)
+
+    expect(handleSubmit).toEqual(prevHandleSubmit)
+  })
+})
+
+test('validationOptions are passed to validate and onSubmit', () => {
+  const onSubmitMock = jest.fn()
+  const validateMock = jest.fn(() => ({}))
+
+  const { mockFunc } = setupTest({
+    validationOptions: 123,
+    onSubmit: onSubmitMock,
+    validate: validateMock,
+  })
+
+  const { handleSubmit } = getLastArgs(mockFunc)
+  handleSubmit()
+
+  expect(getLastArgs(onSubmitMock)).toEqual(
+    {
+      foo: '',
+      bar: '',
+      baz: '',
+    },
+    123,
+  )
+  expect(getLastArgs(validateMock)).toEqual(
+    {
+      foo: '',
+      bar: '',
+      baz: '',
+    },
+    123,
+  )
 })

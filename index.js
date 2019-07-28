@@ -29,22 +29,19 @@ export default ({
 
   const fieldNames = useRef(Object.keys(initialValues))
 
-  const handleSubmit = useCallback(
-    () => {
-      if (forceShowOnSubmit) {
-        for (const fieldName of fieldNames.current) {
-          setTouched(fieldName)
-        }
+  const handleSubmit = () => {
+    if (forceShowOnSubmit) {
+      for (const fieldName of fieldNames.current) {
+        setTouched(fieldName)
       }
+    }
 
-      for (const error of Object.values(validationState.errors)) {
-        if (error) return
-      }
+    for (const error of Object.values(validationState.errors)) {
+      if (error) return
+    }
 
-      onSubmit && onSubmit(validationState.values, validationOptions)
-    },
-    [validationState],
-  )
+    onSubmit && onSubmit(validationState.values, validationOptions)
+  }
 
   const isSyntheticEvent = e => e && e.target && typeof e.target === 'object'
 
