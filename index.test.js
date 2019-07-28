@@ -228,4 +228,19 @@ describe('use-validation', () => {
       123,
     )
   })
+
+  test('handleChange and handleBlur references persist across renders', () => {
+    const { fields: prevFields } = mockFunc.mock.calls[
+      mockFunc.mock.calls.length - 2
+    ][0]
+
+    const { fields: currentFields } = getLastArgs(mockFunc)
+
+    expect(currentFields.foo.onChange).toEqual(prevFields.foo.onChange)
+    expect(currentFields.foo.onBlur).toEqual(prevFields.foo.onBlur)
+    expect(currentFields.bar.onChange).toEqual(prevFields.bar.onChange)
+    expect(currentFields.bar.onBlur).toEqual(prevFields.bar.onBlur)
+    expect(currentFields.baz.onChange).toEqual(prevFields.baz.onChange)
+    expect(currentFields.baz.onBlur).toEqual(prevFields.baz.onBlur)
+  })
 })

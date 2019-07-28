@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer, useCallback, useRef } from 'react'
 
 export default ({
   initialValues,
@@ -11,61 +11,80 @@ export default ({
   validationOptions,
   onSubmit,
 }) => {
-  const [values, setValues] = useState(initialValues)
-  const [errors, setErrors] = useState(
-    validate(initialValues, validationOptions),
+  const [validationState, dispatch] = useReducer(
+    makeValidationReducer(validate, validationOptions),
+    {
+      values: initialValues,
+      errors: validate(initialValues, validationOptions),
+    },
   )
-  const [touched, setTouched] = useState({})
 
-  const handleChange = fieldName => eventOrValue => {
-    const isSyntheticEvent = e => e && e.target && typeof e.target === 'object'
-    const newValues = {
-      ...values,
-      [fieldName]: isSyntheticEvent(eventOrValue)
-        ? eventOrValue.target.value
-        : eventOrValue,
-    }
-    setValues(newValues)
-    setErrors(validate(newValues, validationOptions))
-  }
-
-  const handleBlur = fieldName => () => {
-    setTouched({
-      ...touched,
+  const [touched, setTouched] = useReducer(
+    (state, fieldName) => ({
+      ...state,
       [fieldName]: true,
-    })
-  }
+    }),
+    {},
+  )
 
-  const handleSubmit = () => {
-    if (forceShowOnSubmit) {
-      setTouched(
-        Object.keys(initialValues).reduce(
-          (touched, fieldName) => ({
-            ...touched,
-            [fieldName]: true,
-          }),
-          {},
-        ),
-      )
-    }
+  const fieldNames = useRef(Object.keys(initialValues))
 
-    for (const error of Object.values(errors)) {
-      if (error) return
-    }
+  const handleSubmit = useCallback(
+    () => {
+      if (forceShowOnSubmit) {
+        for (const fieldName of fieldNames.current) {
+          setTouched(fieldName)
+        }
+      }
 
-    onSubmit && onSubmit(values, validationOptions)
-  }
+      for (const error of Object.values(validationState.errors)) {
+        if (error) return
+      }
+
+      onSubmit && onSubmit(validationState.values, validationOptions)
+    },
+    [validationState],
+  )
+
+  const isSyntheticEvent = e => e && e.target && typeof e.target === 'object'
+
+  const changeHandlers = useRef(
+    fieldNames.current.reduce(
+      (changeHandlers, fieldName) => ({
+        ...changeHandlers,
+        [fieldName]: useCallback(eventOrValue => {
+          const value = isSyntheticEvent(eventOrValue)
+            ? eventOrValue.target.value
+            : eventOrValue
+          dispatch({ fieldName, value })
+        }),
+      }),
+      {},
+    ),
+  )
+
+  const blurHandlers = useRef(
+    fieldNames.current.reduce(
+      (changeHandlers, fieldName) => ({
+        ...changeHandlers,
+        [fieldName]: useCallback(() => {
+          setTouched(fieldName)
+        }),
+      }),
+      {},
+    ),
+  )
 
   return {
-    fields: Object.keys(initialValues).reduce(
+    fields: fieldNames.current.reduce(
       (fields, fieldName) => ({
         ...fields,
         [fieldName]: {
-          error: errors[fieldName],
+          error: validationState.errors[fieldName],
           touched: touched[fieldName],
-          value: values[fieldName],
-          onChange: handleChange(fieldName),
-          onBlur: handleBlur(fieldName),
+          value: validationState.values[fieldName],
+          onChange: changeHandlers.current[fieldName],
+          onBlur: blurHandlers.current[fieldName],
         },
       }),
       {},
@@ -79,3 +98,19 @@ const makeSimpleValidator = (fieldNames, message) => values =>
     errors[fieldName] = values[fieldName] === '' ? message : null
     return errors
   }, {})
+
+const makeValidationReducer = (validate, validationOptions) => (
+  state,
+  { fieldName, value },
+) => {
+  const values = {
+    ...state.values,
+    [fieldName]: value,
+  }
+  const errors = validate(values, validationOptions)
+
+  return {
+    values,
+    errors,
+  }
+}
