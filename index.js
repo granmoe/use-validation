@@ -87,6 +87,7 @@ export default ({
       {},
     ),
     handleSubmit,
+    isValid: !Object.values(validationState.errors).some(Boolean),
   }
 }
 

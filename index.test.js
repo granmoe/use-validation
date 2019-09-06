@@ -5,7 +5,7 @@ import useValidation from './index' // eslint-disable-line unicorn/import-index
 const setupTest = options => {
   // eslint-disable-next-line react/prop-types
   const TestComponent = ({ mockFunc }) => {
-    const { fields, handleSubmit } = useValidation({
+    const { fields, handleSubmit, isValid } = useValidation({
       initialValues: {
         foo: '',
         bar: '',
@@ -14,7 +14,7 @@ const setupTest = options => {
       ...options,
     })
 
-    mockFunc({ fields, handleSubmit })
+    mockFunc({ fields, handleSubmit, isValid })
 
     return (
       <React.Fragment>
@@ -185,6 +185,11 @@ describe('use-validation', () => {
     expect(mockOnSubmit.mock.calls.length).toBe(0)
   })
 
+  test('isValid is false if there are any errors', () => {
+    const { isValid } = getLastArgs(mockFunc)
+    expect(isValid).toBe(false)
+  })
+
   test('handleSubmit calls onSubmit when all fields are valid', () => {
     fireEvent.change(getByTestId('baz'), {
       target: {
@@ -196,6 +201,11 @@ describe('use-validation', () => {
     handleSubmit()
 
     expect(mockOnSubmit.mock.calls.length).toBe(1)
+  })
+
+  test('isValid is true if there are no errors', () => {
+    const { isValid } = getLastArgs(mockFunc)
+    expect(isValid).toBe(true)
   })
 
   test('handleChange and handleBlur references persist across renders', () => {
