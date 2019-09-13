@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useRef, useMemo } from 'react'
+import { useReducer, useCallback, useRef } from 'react'
 import makeSimpleValidator from './make-simple-validator'
 
 export default ({
@@ -27,7 +27,6 @@ export default ({
 
   const keys = useRef()
   keys.current = validationState.map(({ key }) => key)
-  const keysString = keys.current.toString()
 
   const areAllValid = validationState.every(({ isValid }) => isValid)
 
@@ -44,56 +43,52 @@ export default ({
 
   const isSyntheticEvent = e => e && e.target && typeof e.target === 'object'
 
-  const changeHandlersByKey = useMemo(
-    () =>
-      keys.current.reduce(
-        (changeHandlersByKey, key) => ({
-          [key]: fieldNames.current.reduce(
-            (changeHandlers, fieldName) => ({
-              ...changeHandlers,
-              [fieldName]: useCallback(eventOrValue => {
-                const value = isSyntheticEvent(eventOrValue)
-                  ? eventOrValue.target.value
-                  : eventOrValue
-                dispatch({ type: 'change', key, fieldName, value })
-              }),
-            }),
-            {},
-          ),
+  // FIXME: Need to figure out how this will work when things are added / removed
+  const changeHandlersByKey = useRef()
+  changeHandlersByKey.current = keys.current.reduce(
+    (changeHandlersByKey, key) => ({
+      [key]: fieldNames.current.reduce(
+        (changeHandlers, fieldName) => ({
+          ...changeHandlers,
+          [fieldName]: useCallback(eventOrValue => {
+            const value = isSyntheticEvent(eventOrValue)
+              ? eventOrValue.target.value
+              : eventOrValue
+            dispatch({ type: 'change', key, fieldName, value })
+          }),
         }),
         {},
       ),
-    [keysString],
+    }),
+    {},
   )
 
-  const blurHandlersByKey = useMemo(
-    () =>
-      keys.current.reduce(
-        (blurHandlersByKey, key) => ({
-          ...blurHandlersByKey,
-          [key]: fieldNames.current.reduce(
-            (blurHandlers, fieldName) => ({
-              ...blurHandlers,
-              [fieldName]: useCallback(() => {
-                dispatch({ type: 'blur', key, fieldName })
-              }),
-            }),
-            {},
-          ),
+  const blurHandlersByKey = useRef()
+  blurHandlersByKey.current = keys.current.reduce(
+    (blurHandlersByKey, key) => ({
+      ...blurHandlersByKey,
+      [key]: fieldNames.current.reduce(
+        (blurHandlers, fieldName) => ({
+          ...blurHandlers,
+          [fieldName]: useCallback(() => {
+            dispatch({ type: 'blur', key, fieldName })
+          }),
         }),
         {},
       ),
-    [keysString],
+    }),
+    {},
   )
 
-  const removeHandlersByKey = useMemo(
-    () =>
-      keys.current.reduce((removeHandlersByKey, key) => ({
-        [key]: useCallback(() => {
-          dispatch({ type: 'remove', key })
-        }),
-      })),
-    [keysString],
+  const removeHandlersByKey = useRef()
+  removeHandlersByKey.current = keys.current.reduce(
+    (removeHandlersByKey, key) => ({
+      ...removeHandlersByKey,
+      [key]: useCallback(() => {
+        dispatch({ type: 'remove', key })
+      }),
+    }),
+    {},
   )
 
   const add = useCallback(() => {
@@ -103,7 +98,7 @@ export default ({
   return {
     add,
     groups: validationState.map(group => ({
-      remove: removeHandlersByKey[group.key],
+      remove: removeHandlersByKey.current[group.key],
       key: group.key,
       isValid: group.isValid,
       fields: fieldNames.current.reduce(
@@ -113,8 +108,8 @@ export default ({
             error: group.errors[fieldName],
             touched: group.touched[fieldName],
             value: group.values[fieldName],
-            onChange: changeHandlersByKey[group.key][fieldName],
-            onBlur: blurHandlersByKey[group.key][fieldName],
+            onChange: changeHandlersByKey.current[group.key][fieldName],
+            onBlur: blurHandlersByKey.current[group.key][fieldName],
           },
         }),
         {},
