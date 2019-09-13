@@ -157,7 +157,7 @@ describe('use-validation', () => {
     expect(fieldsAfterBlur.baz.touched).toBeFalsy()
   })
 
-  test('touched is set to true on all fields when handleSubmit is called', () => {
+  test('touched is set to true on all fields when handleSubmit is called when forceShowOnSubmit is omitted (defaults to true) or passed as true', () => {
     const { handleSubmit } = getLastArgs(mockFunc)
     handleSubmit()
 
@@ -168,8 +168,8 @@ describe('use-validation', () => {
     expect(fields.baz.touched).toBeTruthy()
   })
 
-  test('touched is NOT changed on any fields when handleSubmit is called if forceShowOnSubmit is passed as true', () => {
-    const { mockFunc } = setupTest()
+  test('touched is NOT changed on any fields when handleSubmit is called if forceShowOnSubmit is passed as false', () => {
+    const { mockFunc } = setupTest({ forceShowOnSubmit: false })
     const { fields, handleSubmit } = getLastArgs(mockFunc)
     handleSubmit()
 
@@ -223,15 +223,14 @@ describe('use-validation', () => {
     expect(currentFields.baz.onBlur).toEqual(prevFields.baz.onBlur)
   })
 
-  // TODO...wtf?
-  xtest('handleSubmit reference is not persisted across renders', () => {
+  test('handleSubmit reference is not persisted across renders', () => {
     const { handleSubmit: prevHandleSubmit } = mockFunc.mock.calls[
       mockFunc.mock.calls.length - 2
     ][0]
 
     const { handleSubmit } = getLastArgs(mockFunc)
 
-    expect(handleSubmit).toEqual(prevHandleSubmit)
+    expect(handleSubmit).not.toEqual(prevHandleSubmit)
   })
 })
 

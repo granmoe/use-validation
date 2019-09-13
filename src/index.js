@@ -1,6 +1,13 @@
 import { useReducer, useCallback, useRef } from 'react'
+import useArrayValidation from './use-array-validation'
+import makeSimpleValidator from './make-simple-validator'
 
-export default ({
+export default ({ initialValues, ...rest }) =>
+  Array.isArray(initialValues)
+    ? useArrayValidation({ initialValues, ...rest })
+    : useValidation({ initialValues, ...rest })
+
+const useValidation = ({
   initialValues,
   defaultErrorMessage = `Looks like that didn't work. Please try again.`,
   validate = makeSimpleValidator(
@@ -90,12 +97,6 @@ export default ({
     isValid: !Object.values(validationState.errors).some(Boolean),
   }
 }
-
-const makeSimpleValidator = (fieldNames, message) => values =>
-  fieldNames.reduce((errors, fieldName) => {
-    errors[fieldName] = values[fieldName] === '' ? message : null
-    return errors
-  }, {})
 
 const makeValidationReducer = (validate, validationOptions) => (
   state,
