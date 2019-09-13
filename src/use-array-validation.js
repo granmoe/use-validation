@@ -87,11 +87,12 @@ export default ({
   )
 
   const removeHandlersByKey = useMemo(
-    keys.current.reduce((removeHandlersByKey, key) => ({
-      [key]: useCallback(() => {
-        dispatch({ type: 'remove', key })
-      }),
-    })),
+    () =>
+      keys.current.reduce((removeHandlersByKey, key) => ({
+        [key]: useCallback(() => {
+          dispatch({ type: 'remove', key })
+        }),
+      })),
     [keysString],
   )
 
