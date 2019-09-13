@@ -1,8 +1,13 @@
 import React from 'react'
-import { render, fireEvent } from 'react-testing-library'
+import { act } from 'react-dom/test-utils'
+import { render, fireEvent } from '@testing-library/react'
 import useValidation from './index' // eslint-disable-line unicorn/import-index
 
-const setupTest = options => {
+const setupTest = (
+  options = {
+    onSubmit: jest.fn(),
+  },
+) => {
   // eslint-disable-next-line react/prop-types
   const TestComponent = ({ mockFunc }) => {
     const { fields, handleSubmit, isValid } = useValidation({
@@ -17,7 +22,7 @@ const setupTest = options => {
     mockFunc({ fields, handleSubmit, isValid })
 
     return (
-      <React.Fragment>
+      <div>
         <input
           data-testid="foo"
           onChange={fields.foo.onChange}
@@ -32,10 +37,12 @@ const setupTest = options => {
         />
         <input
           data-testid="baz"
-          onChange={fields.baz.onChange}
+          onChange={e => {
+            fields.baz.onChange(e.target.value)
+          }}
           onBlur={fields.baz.onBlur}
         />
-      </React.Fragment>
+      </div>
     )
   }
 
@@ -49,16 +56,11 @@ const getLastArgs = mockObject =>
   mockObject.mock.calls[mockObject.mock.calls.length - 1][0]
 
 describe('use-validation', () => {
-  const mockOnSubmit = jest.fn()
-  const {
-    renderContext: { getByTestId },
-    mockFunc,
-  } = setupTest({
-    defaultErrorMessage: 'Please enter a value',
-    onSubmit: mockOnSubmit,
-  })
-
   test('fields are initialized correctly', () => {
+    const { mockFunc } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
     const { fields } = getLastArgs(mockFunc)
 
     expect(fields).toEqual({
@@ -87,11 +89,19 @@ describe('use-validation', () => {
   })
 
   test('values are updated correctly when onChange is called with an event', () => {
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
     fireEvent.change(getByTestId('foo'), {
       target: {
         value: 'foo value',
       },
     })
+
     const { fields } = getLastArgs(mockFunc)
 
     expect(fields.foo.value).toEqual('foo value')
@@ -100,37 +110,34 @@ describe('use-validation', () => {
   })
 
   test('values are updated correctly when onChange is called with a plain value', () => {
-    fireEvent.change(getByTestId('bar'), {
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
+    fireEvent.change(getByTestId('baz'), {
       target: {
-        value: 'bar value',
+        value: 'baz value',
       },
     })
+
     const { fields } = getLastArgs(mockFunc)
 
-    expect(fields.foo.value).toEqual('foo value')
-    expect(fields.bar.value).toEqual('bar value')
-    expect(fields.baz.value).toEqual('')
-  })
-
-  test('errors are updated correctly when values change', () => {
-    const { fields: prevFields } = mockFunc.mock.calls[
-      mockFunc.mock.calls.length - 2
-    ][0]
-
-    expect(prevFields.foo.error).toEqual(null)
-    expect(prevFields.bar.error).toEqual('Please enter a value')
-    expect(prevFields.baz.error).toEqual('Please enter a value')
-
-    const { fields: currentFields } = getLastArgs(mockFunc)
-
-    expect(currentFields.foo.error).toEqual(null)
-    expect(currentFields.bar.error).toEqual(null)
-    expect(currentFields.baz.error).toEqual('Please enter a value')
+    expect(fields.foo.value).toEqual('')
+    expect(fields.bar.value).toEqual('')
+    // Baz input calls fields.baz.onChange with e.target.value
+    expect(fields.baz.value).toEqual('baz value')
   })
 
   test('custom error message for defaultValidation is used if passed', () => {
+    const { mockFunc } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
     const { fields } = getLastArgs(mockFunc)
-    expect(fields.baz.error).toEqual('Please enter a value')
+    expect(fields.foo.error).toEqual('Please enter a value')
   })
 
   test('default error message used if errorMessage not passed', () => {
@@ -141,7 +148,47 @@ describe('use-validation', () => {
     )
   })
 
+  test('errors are updated correctly when values change', () => {
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
+    const { fields: prevFields } = getLastArgs(mockFunc)
+
+    expect(prevFields.foo.error).toEqual('Please enter a value')
+    expect(prevFields.bar.error).toEqual('Please enter a value')
+    expect(prevFields.baz.error).toEqual('Please enter a value')
+
+    fireEvent.change(getByTestId('foo'), {
+      target: {
+        value: 'foo value',
+      },
+    })
+
+    fireEvent.change(getByTestId('bar'), {
+      target: {
+        value: 'bar value',
+      },
+    })
+
+    const { fields: currentFields } = getLastArgs(mockFunc)
+
+    expect(currentFields.foo.error).toEqual(null)
+    expect(currentFields.bar.error).toEqual(null)
+    expect(currentFields.baz.error).toEqual('Please enter a value')
+  })
+
   test('touched is updated correctly when field is blurred', () => {
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
     const { fields: fieldsBeforeBlur } = getLastArgs(mockFunc)
 
     expect(fieldsBeforeBlur.foo.touched).toBeFalsy()
@@ -158,8 +205,14 @@ describe('use-validation', () => {
   })
 
   test('touched is set to true on all fields when handleSubmit is called when forceShowOnSubmit is omitted (defaults to true) or passed as true', () => {
+    const { mockFunc } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
     const { handleSubmit } = getLastArgs(mockFunc)
-    handleSubmit()
+    act(() => {
+      handleSubmit()
+    })
 
     const { fields } = getLastArgs(mockFunc)
 
@@ -169,9 +222,15 @@ describe('use-validation', () => {
   })
 
   test('touched is NOT changed on any fields when handleSubmit is called if forceShowOnSubmit is passed as false', () => {
-    const { mockFunc } = setupTest({ forceShowOnSubmit: false })
+    const { mockFunc } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+      forceShowOnSubmit: false,
+    })
+
     const { fields, handleSubmit } = getLastArgs(mockFunc)
-    handleSubmit()
+    act(() => {
+      handleSubmit()
+    })
 
     expect(fields.foo.touched).toBeFalsy()
     expect(fields.bar.touched).toBeFalsy()
@@ -179,18 +238,53 @@ describe('use-validation', () => {
   })
 
   test('handleSubmit does not call onSubmit when one or more fields are invalid', () => {
+    const mockOnSubmit = jest.fn()
+    const { mockFunc } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+      forceShowOnSubmit: false,
+      onSubmit: mockOnSubmit,
+    })
+
     const { handleSubmit } = getLastArgs(mockFunc)
-    handleSubmit()
+    act(() => {
+      handleSubmit()
+    })
 
     expect(mockOnSubmit.mock.calls.length).toBe(0)
   })
 
   test('isValid is false if there are any errors', () => {
+    const { mockFunc } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
     const { isValid } = getLastArgs(mockFunc)
     expect(isValid).toBe(false)
   })
 
   test('handleSubmit calls onSubmit when all fields are valid', () => {
+    const mockOnSubmit = jest.fn()
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+      forceShowOnSubmit: false,
+      onSubmit: mockOnSubmit,
+    })
+
+    fireEvent.change(getByTestId('foo'), {
+      target: {
+        value: 'foo value',
+      },
+    })
+
+    fireEvent.change(getByTestId('bar'), {
+      target: {
+        value: 'bar value',
+      },
+    })
+
     fireEvent.change(getByTestId('baz'), {
       target: {
         value: 'baz value',
@@ -198,20 +292,70 @@ describe('use-validation', () => {
     })
 
     const { handleSubmit } = getLastArgs(mockFunc)
-    handleSubmit()
+    act(() => {
+      handleSubmit()
+    })
 
     expect(mockOnSubmit.mock.calls.length).toBe(1)
   })
 
   test('isValid is true if there are no errors', () => {
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
+    fireEvent.change(getByTestId('foo'), {
+      target: {
+        value: 'foo value',
+      },
+    })
+
+    fireEvent.change(getByTestId('bar'), {
+      target: {
+        value: 'bar value',
+      },
+    })
+
+    fireEvent.change(getByTestId('baz'), {
+      target: {
+        value: 'baz value',
+      },
+    })
+
     const { isValid } = getLastArgs(mockFunc)
     expect(isValid).toBe(true)
   })
 
   test('handleChange and handleBlur references persist across renders', () => {
-    const { fields: prevFields } = mockFunc.mock.calls[
-      mockFunc.mock.calls.length - 2
-    ][0]
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
+    const { fields: prevFields } = getLastArgs(mockFunc)
+
+    fireEvent.change(getByTestId('foo'), {
+      target: {
+        value: 'foo value',
+      },
+    })
+
+    fireEvent.change(getByTestId('bar'), {
+      target: {
+        value: 'bar value',
+      },
+    })
+
+    fireEvent.change(getByTestId('baz'), {
+      target: {
+        value: 'baz value',
+      },
+    })
 
     const { fields: currentFields } = getLastArgs(mockFunc)
 
@@ -224,9 +368,20 @@ describe('use-validation', () => {
   })
 
   test('handleSubmit reference is not persisted across renders', () => {
-    const { handleSubmit: prevHandleSubmit } = mockFunc.mock.calls[
-      mockFunc.mock.calls.length - 2
-    ][0]
+    const {
+      mockFunc,
+      renderContext: { getByTestId },
+    } = setupTest({
+      defaultErrorMessage: 'Please enter a value',
+    })
+
+    const { handleSubmit: prevHandleSubmit } = getLastArgs(mockFunc)
+
+    fireEvent.change(getByTestId('baz'), {
+      target: {
+        value: 'baz value',
+      },
+    })
 
     const { handleSubmit } = getLastArgs(mockFunc)
 
@@ -245,7 +400,9 @@ test('validationOptions are passed to validate and onSubmit', () => {
   })
 
   const { handleSubmit } = getLastArgs(mockFunc)
-  handleSubmit()
+  act(() => {
+    handleSubmit()
+  })
 
   expect(getLastArgs(onSubmitMock)).toEqual(
     {
