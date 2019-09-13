@@ -86,8 +86,23 @@ export default ({
     [keysString],
   )
 
+  const removeHandlersByKey = useMemo(
+    keys.current.reduce((removeHandlersByKey, key) => ({
+      [key]: useCallback(() => {
+        dispatch({ type: 'remove', key })
+      }),
+    })),
+    [keysString],
+  )
+
+  const add = useCallback(() => {
+    dispatch({ type: 'add' })
+  })
+
   return {
+    add,
     groups: validationState.map(group => ({
+      remove: removeHandlersByKey[group.key],
       key: group.key,
       isValid: group.isValid,
       fields: fieldNames.current.reduce(
@@ -186,7 +201,6 @@ const makeValidationReducer = (
     }
 
     // TODO: Does everything still work if there are no groups?
-    // Make return [{}] so callers don't blow up?
     const index = state.findIndex(group => group.key === key)
 
     return index === 0

@@ -306,3 +306,4 @@ test('validationOptions are passed to validate and onSubmit', () => {
 })
 
 // TODO: Tests for areAllValid, add, remove
+// add and remove should be same references across renders
