@@ -1,12 +1,14 @@
 # ✏️ ⚡️ Simple yet robust form validation for React ⚡️ ✏️
 
-The most concise and elegant form validation API known to humankind.
+Offering the most concise and elegant form validation API known to humankind, without sacrificing performance.
 
 _Weighing in at a whopping 1.1 kB gzipped and minified._
 
 ## Installation
 
-### Note that this library requires the new React "hooks" API!
+`npm install use-validation`
+
+or
 
 `yarn add use-validation`
 
@@ -55,8 +57,8 @@ const myValidationFunc = (
     typeof foo !== 'number'
       ? 'Please enter a number'
       : foo === someOtherJunk
-        ? `foo cannot be ${someOtherJunk}`
-        : null,
+      ? `foo cannot be ${someOtherJunk}`
+      : null,
   bar: bar === someRandomThing ? `bar cannot be ${someRandomThing}` : null,
 })
 

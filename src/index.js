@@ -56,12 +56,14 @@ const useValidation = ({
     fieldNames.current.reduce(
       (changeHandlers, fieldName) => ({
         ...changeHandlers,
+        // This is safe because fieldNames.current will never change
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         [fieldName]: useCallback(eventOrValue => {
           const value = isSyntheticEvent(eventOrValue)
             ? eventOrValue.target.value
             : eventOrValue
           dispatch({ fieldName, value })
-        }),
+        }, []), // eslint-disable-line react-hooks/exhaustive-deps
       }),
       {},
     ),
@@ -71,9 +73,11 @@ const useValidation = ({
     fieldNames.current.reduce(
       (changeHandlers, fieldName) => ({
         ...changeHandlers,
+        // This is safe because fieldNames.current will never change
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         [fieldName]: useCallback(() => {
           setTouched(fieldName)
-        }),
+        }, []), // eslint-disable-line react-hooks/exhaustive-deps
       }),
       {},
     ),
