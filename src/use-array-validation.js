@@ -26,6 +26,8 @@ export default ({
   )
 
   const keys = useRef()
+  const prevKeys = useRef()
+  prevKeys.current = keys.current
   keys.current = validationState.map(({ key }) => key)
 
   const areAllValid = validationState.every(({ isValid }) => isValid)
@@ -47,12 +49,53 @@ export default ({
     dispatch({ type: 'add' })
   }, [dispatch])
 
+  const createEventHandlers = keys =>
+    keys.reduce(
+      (groupsByKey, key) => ({
+        ...groupsByKey,
+        [key]: fieldNames.current.reduce(
+          (eventHandlers, fieldName) => ({
+            ...eventHandlers,
+            [fieldName]: {
+              onChange: eventOrValue => {
+                const value = isSyntheticEvent(eventOrValue)
+                  ? eventOrValue.target.value
+                  : eventOrValue
+                dispatch({ type: 'change', key, fieldName, value })
+              },
+              onBlur: () => {
+                dispatch({ type: 'blur', key, fieldName })
+              },
+            },
+          }),
+          {},
+        ),
+      }),
+      {},
+    )
+
+  const createRemoveFuncs = keys =>
+    keys.reduce(
+      (removeFuncsByKey, key) => ({
+        ...removeFuncsByKey,
+        [key]: () => {
+          dispatch({ type: 'remove', key })
+        },
+      }),
+      {},
+    )
+
+  const removeFuncs = useRef(createRemoveFuncs(keys.current))
+  const eventHandlers = useRef(createEventHandlers(keys.current))
+  if (prevKeys.current && prevKeys.current.length !== keys.current.length) {
+    eventHandlers.current = createEventHandlers(keys.current)
+    removeFuncs.current = createRemoveFuncs(keys.current)
+  }
+
   return {
     add,
     groups: validationState.map(group => ({
-      remove: () => {
-        dispatch({ type: 'remove', key: group.key })
-      },
+      remove: removeFuncs.current[group.key],
       key: group.key,
       isValid: group.isValid,
       fields: fieldNames.current.reduce(
@@ -62,15 +105,7 @@ export default ({
             error: group.errors[fieldName],
             touched: group.touched[fieldName],
             value: group.values[fieldName],
-            onChange: eventOrValue => {
-              const value = isSyntheticEvent(eventOrValue)
-                ? eventOrValue.target.value
-                : eventOrValue
-              dispatch({ type: 'change', key: group.key, fieldName, value })
-            },
-            onBlur: () => {
-              dispatch({ type: 'blur', key: group.key, fieldName })
-            },
+            ...eventHandlers.current[group.key][fieldName],
           },
         }),
         {},
@@ -105,7 +140,7 @@ const makeValidationReducer = (
     const index = state.findIndex(group => group.key === key)
     return index === 0
       ? [updatedGroup, ...state.slice(1)]
-      : [...state.slice(0, index), updatedGroup, state.slice(index + 1)]
+      : [...state.slice(0, index), updatedGroup, ...state.slice(index + 1)]
   }
 
   if (type === 'blur') {
@@ -124,8 +159,8 @@ const makeValidationReducer = (
 
     const index = state.findIndex(group => group.key === key)
     return index === 0
-      ? [updatedGroup, state.slice(1)]
-      : [state.slice(0, index), updatedGroup, state.slice(index + 1)]
+      ? [updatedGroup, ...state.slice(1)]
+      : [...state.slice(0, index), updatedGroup, ...state.slice(index + 1)]
   }
 
   if (type === 'blur-all') {
@@ -144,7 +179,8 @@ const makeValidationReducer = (
   if (type === 'add') {
     return [
       ...state,
-      initFormFields(initialValues, {
+      // Use values of first group from initial values for our copy
+      initFormFields(initialValues[0], {
         validate,
         validationOptions,
         fieldNames,
@@ -157,12 +193,11 @@ const makeValidationReducer = (
       return state
     }
 
-    // TODO: Does everything still work if there are no groups?
     const index = state.findIndex(group => group.key === key)
 
     return index === 0
       ? state.slice(1)
-      : [...state.slice(0, index), state.slice(index + 1)]
+      : [...state.slice(0, index), ...state.slice(index + 1)]
   }
 
   throw new Error(`Unknown type: ${type}`)

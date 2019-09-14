@@ -10,7 +10,7 @@ const setupTest = (
 ) => {
   // eslint-disable-next-line react/prop-types
   const TestComponent = ({ mockFunc }) => {
-    const { groups, handleSubmit, areAllValid } = useValidation({
+    const { add, groups, handleSubmit, areAllValid } = useValidation({
       initialValues: [
         {
           foo: '',
@@ -21,7 +21,7 @@ const setupTest = (
       ...options,
     })
 
-    mockFunc({ groups, handleSubmit, areAllValid })
+    mockFunc({ add, groups, handleSubmit, areAllValid })
 
     return (
       <div>
@@ -351,8 +351,7 @@ describe('use-validation', () => {
     expect(isValid).toBe(true)
   })
 
-  // FIXME: might not be possible anyway
-  xtest('handleChange and handleBlur references persist across renders', () => {
+  test('handleChange and handleBlur references persist across renders', () => {
     const {
       mockFunc,
       renderContext: { getByTestId },
@@ -450,3 +449,258 @@ test('validationOptions are passed to validate and onSubmit', () => {
     123,
   )
 })
+
+// FIXME: Break this up into more focused tests and add missing tests
+test.only('Everything works when adding / removing groups', () => {
+  const {
+    mockFunc,
+    renderContext: { getByTestId },
+  } = setupTest()
+
+  const {
+    add,
+    groups: [{ key }],
+  } = getLastArgs(mockFunc)
+
+  act(() => {
+    add()
+  })
+
+  fireEvent.change(getByTestId(`baz-${key}`), {
+    target: {
+      value: 'baz value',
+    },
+  })
+
+  fireEvent.blur(getByTestId(`baz-${key}`))
+
+  const formatSnapshot = raw => JSON.stringify(raw, null, 2).replace(/\\/g, '')
+
+  expect(formatSnapshot(getLastArgs(mockFunc))).toMatchInlineSnapshot(`
+    "{
+      \\"groups\\": [
+        {
+          \\"key\\": 0,
+          \\"isValid\\": false,
+          \\"fields\\": {
+            \\"foo\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            },
+            \\"bar\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            },
+            \\"baz\\": {
+              \\"error\\": null,
+              \\"touched\\": true,
+              \\"value\\": \\"baz value\\"
+            }
+          }
+        },
+        {
+          \\"key\\": 3,
+          \\"isValid\\": false,
+          \\"fields\\": {
+            \\"foo\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            },
+            \\"bar\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            },
+            \\"baz\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            }
+          }
+        }
+      ],
+      \\"areAllValid\\": false
+    }"
+  `)
+
+  // Make all groups valid...
+
+  fireEvent.change(getByTestId(`foo-${key}`), {
+    target: {
+      value: 'foo value',
+    },
+  })
+
+  fireEvent.change(getByTestId(`bar-${key}`), {
+    target: {
+      value: 'bar value',
+    },
+  })
+
+  const {
+    groups: [_, { key: secondKey }],
+  } = getLastArgs(mockFunc)
+
+  fireEvent.change(getByTestId(`foo-${secondKey}`), {
+    target: {
+      value: 'foo value',
+    },
+  })
+
+  fireEvent.change(getByTestId(`bar-${secondKey}`), {
+    target: {
+      value: 'bar value',
+    },
+  })
+
+  fireEvent.change(getByTestId(`baz-${secondKey}`), {
+    target: {
+      value: 'baz value',
+    },
+  })
+
+  expect(formatSnapshot(getLastArgs(mockFunc))).toMatchInlineSnapshot(`
+    "{
+      \\"groups\\": [
+        {
+          \\"key\\": 0,
+          \\"isValid\\": true,
+          \\"fields\\": {
+            \\"foo\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"foo value\\"
+            },
+            \\"bar\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"bar value\\"
+            },
+            \\"baz\\": {
+              \\"error\\": null,
+              \\"touched\\": true,
+              \\"value\\": \\"baz value\\"
+            }
+          }
+        },
+        {
+          \\"key\\": 3,
+          \\"isValid\\": true,
+          \\"fields\\": {
+            \\"foo\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"foo value\\"
+            },
+            \\"bar\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"bar value\\"
+            },
+            \\"baz\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"baz value\\"
+            }
+          }
+        }
+      ],
+      \\"areAllValid\\": true
+    }"
+  `)
+
+  const {
+    groups: [{ remove }],
+  } = getLastArgs(mockFunc)
+
+  act(() => {
+    remove()
+  })
+
+  expect(formatSnapshot(getLastArgs(mockFunc))).toMatchInlineSnapshot(`
+    "{
+      \\"groups\\": [
+        {
+          \\"key\\": 3,
+          \\"isValid\\": true,
+          \\"fields\\": {
+            \\"foo\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"foo value\\"
+            },
+            \\"bar\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"bar value\\"
+            },
+            \\"baz\\": {
+              \\"error\\": null,
+              \\"touched\\": false,
+              \\"value\\": \\"baz value\\"
+            }
+          }
+        }
+      ],
+      \\"areAllValid\\": true
+    }"
+  `)
+
+  const {
+    groups: [{ remove: removeLastGroup }],
+    add: addGroup, // TODO: Awkward name...just avoiding name collision
+  } = getLastArgs(mockFunc)
+
+  act(() => {
+    removeLastGroup()
+  })
+
+  expect(formatSnapshot(getLastArgs(mockFunc))).toMatchInlineSnapshot(`
+    "{
+      \\"groups\\": [],
+      \\"areAllValid\\": true
+    }"
+  `)
+
+  act(() => {
+    addGroup()
+  })
+
+  expect(formatSnapshot(getLastArgs(mockFunc))).toMatchInlineSnapshot(`
+    "{
+      \\"groups\\": [
+        {
+          \\"key\\": 14,
+          \\"isValid\\": false,
+          \\"fields\\": {
+            \\"foo\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            },
+            \\"bar\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            },
+            \\"baz\\": {
+              \\"error\\": \\"Looks like that didn't work. Please try again.\\",
+              \\"touched\\": false,
+              \\"value\\": \\"\\"
+            }
+          }
+        }
+      ],
+      \\"areAllValid\\": false
+    }"
+  `)
+})
+
+/* MISSING TESTS
+ * remove and add are stable across renders
+ * init with multiple groups
+ * a whole bunch more
+ */
