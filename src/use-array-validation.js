@@ -45,9 +45,12 @@ export default ({
 
   const isSyntheticEvent = e => e && e.target && typeof e.target === 'object'
 
-  const add = useCallback(() => {
-    dispatch({ type: 'add' })
-  }, [dispatch])
+  const add = useCallback(
+    values => {
+      dispatch({ type: 'add', values })
+    },
+    [dispatch],
+  )
 
   const createEventHandlers = keys =>
     keys.reduce(
@@ -119,7 +122,7 @@ export default ({
 const makeValidationReducer = (
   initialValues,
   { validate, validationOptions, fieldNames },
-) => (state, { type, key, fieldName, value }) => {
+) => (state, { type, key, fieldName, value, values }) => {
   if (type === 'change') {
     const group = state.find(group => group.key === key)
     const updatedGroup = {
@@ -179,8 +182,7 @@ const makeValidationReducer = (
   if (type === 'add') {
     return [
       ...state,
-      // Use values of first group from initial values for our copy
-      initFormFields(initialValues[0], {
+      initFormFields(values || initialValues[0], {
         validate,
         validationOptions,
         fieldNames,
